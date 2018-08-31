@@ -26,25 +26,20 @@ namespace QuantConnect.Storage
     /// </summary>
     public class LocalObjectStore : IObjectStore
     {
-        private const string RootPath = "./storage";
-
-        /// <summary>
-        /// Static constructor
-        /// </summary>
-        static LocalObjectStore()
-        {
-            Directory.CreateDirectory(RootPath);
-        }
+        private string _rootPath = "./storage";
 
         /// <summary>
         /// Initializes the object store
         /// </summary>
+        /// <param name="algorithmName">The algorithm name</param>
         /// <param name="userId">The user id</param>
         /// <param name="projectId">The project id</param>
         /// <param name="userToken">The user token</param>
         /// <param name="controls">The job controls instance</param>
-        public void Initialize(int userId, int projectId, string userToken, Controls controls)
+        public void Initialize(string algorithmName, int userId, int projectId, string userToken, Controls controls)
         {
+            // absolute path including algorithm name
+            _rootPath = Path.Combine(Path.GetFullPath(_rootPath), algorithmName);
         }
 
         /// <summary>
@@ -74,7 +69,7 @@ namespace QuantConnect.Storage
             }
             catch (Exception exception)
             {
-                Log.Trace($"Error reading file: [{key}] - {exception}");
+                Log.Error($"Error reading file: [{key}] - {exception}");
                 return null;
             }
         }
@@ -95,7 +90,7 @@ namespace QuantConnect.Storage
             }
             catch (Exception exception)
             {
-                Log.Trace($"Error saving file: [{key}] - {exception}");
+                Log.Error($"Error saving file: [{key}] - {exception}");
                 return false;
             }
 
@@ -117,7 +112,7 @@ namespace QuantConnect.Storage
             }
             catch (Exception exception)
             {
-                Log.Trace($"Error deleting file: [{key}] - {exception}");
+                Log.Error($"Error deleting file: [{key}] - {exception}");
                 return false;
             }
 
@@ -131,7 +126,10 @@ namespace QuantConnect.Storage
         /// <returns>The path for the file</returns>
         public string GetFilePath(string key)
         {
-            return Path.Combine(RootPath, $"{key.ToMD5()}.dat");
+            // create the root path if it does not exist
+            Directory.CreateDirectory(_rootPath);
+
+            return Path.Combine(_rootPath, $"{key.ToMD5()}.dat");
         }
 
         /// <summary>

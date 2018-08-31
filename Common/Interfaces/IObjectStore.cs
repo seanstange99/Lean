@@ -28,11 +28,12 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Initializes the object store
         /// </summary>
+        /// <param name="algorithmName">The algorithm name</param>
         /// <param name="userId">The user id</param>
         /// <param name="projectId">The project id</param>
         /// <param name="userToken">The user token</param>
         /// <param name="controls">The job controls instance</param>
-        void Initialize(int userId, int projectId, string userToken, Controls controls);
+        void Initialize(string algorithmName, int userId, int projectId, string userToken, Controls controls);
 
         /// <summary>
         /// Determines whether the store contains data for the specified key

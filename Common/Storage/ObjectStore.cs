@@ -13,8 +13,9 @@
  * limitations under the License.
 */
 
-using System;
+using System.IO;
 using System.Text;
+using System.Xml.Serialization;
 using Newtonsoft.Json;
 using QuantConnect.Interfaces;
 
@@ -26,9 +27,9 @@ namespace QuantConnect.Storage
     public static class ObjectStore
     {
         /// <summary>
-        /// Returns the object data as a string for the specified key
+        /// Returns the string object data for the specified key
         /// </summary>
-        public static string ReadAsString(this IObjectStore store, string key, Encoding encoding = null)
+        public static string ReadText(this IObjectStore store, string key, Encoding encoding = null)
         {
             encoding = encoding ?? Encoding.UTF8;
 
@@ -38,37 +39,66 @@ namespace QuantConnect.Storage
         /// <summary>
         /// Returns the JSON deserialized object data for the specified key
         /// </summary>
-        public static T ReadAsJson<T>(this IObjectStore store, string key)
+        public static T ReadJson<T>(this IObjectStore store, string key, Encoding encoding = null, JsonSerializerSettings settings = null)
         {
-            var json = store.ReadAsString(key);
-            return JsonConvert.DeserializeObject<T>(json);
+            encoding = encoding ?? Encoding.UTF8;
+
+            var json = store.ReadText(key, encoding);
+            return JsonConvert.DeserializeObject<T>(json, settings);
         }
 
         /// <summary>
         /// Returns the XML deserialized object data for the specified key
         /// </summary>
-        public static T ReadAsXml<T>(this IObjectStore store, string key)
+        public static T ReadXml<T>(this IObjectStore store, string key, Encoding encoding = null)
         {
-            throw new NotImplementedException();
+            encoding = encoding ?? Encoding.UTF8;
+
+            var xml = store.ReadText(key, encoding);
+
+            var serializer = new XmlSerializer(typeof(T));
+            using (var reader = new StringReader(xml))
+            {
+                return (T)serializer.Deserialize(reader);
+            }
+        }
+
+        /// <summary>
+        /// Saves the object data in text format for the specified key
+        /// </summary>
+        public static bool SaveText(this IObjectStore store, string key, string text, Encoding encoding = null)
+        {
+            encoding = encoding ?? Encoding.UTF8;
+
+            return store.Save(key, encoding.GetBytes(text));
         }
 
         /// <summary>
         /// Saves the object data in JSON format for the specified key
         /// </summary>
-        public static bool SaveJson<T>(this IObjectStore store, string key, T obj, Encoding encoding = null)
+        public static bool SaveJson<T>(this IObjectStore store, string key, T obj, Encoding encoding = null, JsonSerializerSettings settings = null)
         {
             encoding = encoding ?? Encoding.UTF8;
 
-            var json = JsonConvert.SerializeObject(obj);
-            return store.Save(key, encoding.GetBytes(json));
+            var json = JsonConvert.SerializeObject(obj, settings);
+            return store.SaveText(key, json, encoding);
         }
 
         /// <summary>
         /// Saves the object data in XML format for the specified key
         /// </summary>
-        public static bool SaveXml<T>(this IObjectStore store, string key, T obj)
+        public static bool SaveXml<T>(this IObjectStore store, string key, T obj, Encoding encoding = null)
         {
-            throw new NotImplementedException();
+            encoding = encoding ?? Encoding.UTF8;
+
+            using (var writer = new StringWriter())
+            {
+                var serializer = new XmlSerializer(typeof(T));
+                serializer.Serialize(writer, obj);
+
+                var xml = writer.ToString();
+                return store.SaveText(key, xml, encoding);
+            }
         }
     }
 }

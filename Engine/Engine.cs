@@ -129,7 +129,7 @@ namespace QuantConnect.Lean.Engine
                     AlgorithmHandlers.Alphas.Initialize(job, algorithm, SystemHandlers.Notify, SystemHandlers.Api);
 
                     // initialize the object store
-                    AlgorithmHandlers.ObjectStore.Initialize(job.UserId, job.ProjectId, job.UserToken, job.Controls);
+                    AlgorithmHandlers.ObjectStore.Initialize(algorithm.Name, job.UserId, job.ProjectId, job.UserToken, job.Controls);
 
                     // Initialize the brokerage
                     IBrokerageFactory factory;
@@ -264,6 +264,7 @@ namespace QuantConnect.Lean.Engine
                 Log.Trace("         Results:      " + AlgorithmHandlers.Results.GetType().FullName);
                 Log.Trace("         Transactions: " + AlgorithmHandlers.Transactions.GetType().FullName);
                 Log.Trace("         Alpha:        " + AlgorithmHandlers.Alphas.GetType().FullName);
+                Log.Trace("         ObjectStore:  " + AlgorithmHandlers.ObjectStore.GetType().FullName);
                 if (algorithm?.HistoryProvider != null)
                 {
                     Log.Trace("         History Provider:     " + algorithm.HistoryProvider.GetType().FullName);
