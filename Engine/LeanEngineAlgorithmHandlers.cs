@@ -202,6 +202,7 @@ namespace QuantConnect.Lean.Engine
         public void Dispose()
         {
             Setup.Dispose();
+            ObjectStore.Dispose();
 
             Log.Trace("LeanEngineAlgorithmHandlers.Dispose(): Disposed of algorithm handlers.");
         }
