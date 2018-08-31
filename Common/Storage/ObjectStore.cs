@@ -29,6 +29,10 @@ namespace QuantConnect.Storage
         /// <summary>
         /// Returns the string object data for the specified key
         /// </summary>
+        /// <param name="store">The object store instance</param>
+        /// <param name="key">The object key</param>
+        /// <param name="encoding">The string encoding used</param>
+        /// <returns>A string containing the data</returns>
         public static string ReadText(this IObjectStore store, string key, Encoding encoding = null)
         {
             encoding = encoding ?? Encoding.UTF8;
@@ -39,6 +43,11 @@ namespace QuantConnect.Storage
         /// <summary>
         /// Returns the JSON deserialized object data for the specified key
         /// </summary>
+        /// <param name="store">The object store instance</param>
+        /// <param name="key">The object key</param>
+        /// <param name="encoding">The string encoding used</param>
+        /// <param name="settings">The settings used by the JSON deserializer</param>
+        /// <returns>An object containing the data</returns>
         public static T ReadJson<T>(this IObjectStore store, string key, Encoding encoding = null, JsonSerializerSettings settings = null)
         {
             encoding = encoding ?? Encoding.UTF8;
@@ -50,6 +59,10 @@ namespace QuantConnect.Storage
         /// <summary>
         /// Returns the XML deserialized object data for the specified key
         /// </summary>
+        /// <param name="store">The object store instance</param>
+        /// <param name="key">The object key</param>
+        /// <param name="encoding">The string encoding used</param>
+        /// <returns>An object containing the data</returns>
         public static T ReadXml<T>(this IObjectStore store, string key, Encoding encoding = null)
         {
             encoding = encoding ?? Encoding.UTF8;
@@ -66,6 +79,11 @@ namespace QuantConnect.Storage
         /// <summary>
         /// Saves the object data in text format for the specified key
         /// </summary>
+        /// <param name="store">The object store instance</param>
+        /// <param name="key">The object key</param>
+        /// <param name="text">The string object to be saved</param>
+        /// <param name="encoding">The string encoding used</param>
+        /// <returns>True if the object was saved successfully</returns>
         public static bool SaveText(this IObjectStore store, string key, string text, Encoding encoding = null)
         {
             encoding = encoding ?? Encoding.UTF8;
@@ -76,6 +94,12 @@ namespace QuantConnect.Storage
         /// <summary>
         /// Saves the object data in JSON format for the specified key
         /// </summary>
+        /// <param name="store">The object store instance</param>
+        /// <param name="key">The object key</param>
+        /// <param name="obj">The object to be saved</param>
+        /// <param name="encoding">The string encoding used</param>
+        /// <param name="settings">The settings used by the JSON serializer</param>
+        /// <returns>True if the object was saved successfully</returns>
         public static bool SaveJson<T>(this IObjectStore store, string key, T obj, Encoding encoding = null, JsonSerializerSettings settings = null)
         {
             encoding = encoding ?? Encoding.UTF8;
@@ -87,6 +111,11 @@ namespace QuantConnect.Storage
         /// <summary>
         /// Saves the object data in XML format for the specified key
         /// </summary>
+        /// <param name="store">The object store instance</param>
+        /// <param name="key">The object key</param>
+        /// <param name="obj">The object to be saved</param>
+        /// <param name="encoding">The string encoding used</param>
+        /// <returns>True if the object was saved successfully</returns>
         public static bool SaveXml<T>(this IObjectStore store, string key, T obj, Encoding encoding = null)
         {
             encoding = encoding ?? Encoding.UTF8;

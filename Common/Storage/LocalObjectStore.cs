@@ -15,6 +15,8 @@
 
 using System;
 using System.IO;
+using System.Linq;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
@@ -26,7 +28,8 @@ namespace QuantConnect.Storage
     /// </summary>
     public class LocalObjectStore : IObjectStore
     {
-        private string _rootPath = "./storage";
+        private static readonly string StorageRoot = Path.GetFullPath(Config.Get("object-store-root", "./storage"));
+        private string _algorithmStorageRoot;
 
         /// <summary>
         /// Initializes the object store
@@ -39,7 +42,10 @@ namespace QuantConnect.Storage
         public void Initialize(string algorithmName, int userId, int projectId, string userToken, Controls controls)
         {
             // absolute path including algorithm name
-            _rootPath = Path.Combine(Path.GetFullPath(_rootPath), algorithmName);
+            _algorithmStorageRoot = Path.Combine(StorageRoot, algorithmName);
+
+            // create the root path if it does not exist
+            Directory.CreateDirectory(_algorithmStorageRoot);
         }
 
         /// <summary>
@@ -49,9 +55,22 @@ namespace QuantConnect.Storage
         /// <returns>True if the key was found</returns>
         public bool ContainsKey(string key)
         {
-            var fileName = GetFilePath(key);
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
 
-            return File.Exists(fileName);
+            try
+            {
+                var fileName = GetFilePath(key);
+
+                return File.Exists(fileName);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception, $"Error checking file existence, key: [{key}]");
+                return false;
+            }
         }
 
         /// <summary>
@@ -61,15 +80,20 @@ namespace QuantConnect.Storage
         /// <returns>A byte array containing the data</returns>
         public byte[] Read(string key)
         {
-            var fileName = GetFilePath(key);
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
 
             try
             {
+                var fileName = GetFilePath(key);
+
                 return File.ReadAllBytes(fileName);
             }
             catch (Exception exception)
             {
-                Log.Error($"Error reading file: [{key}] - {exception}");
+                Log.Error(exception, $"Error reading file, key: [{key}]");
                 return null;
             }
         }
@@ -82,15 +106,20 @@ namespace QuantConnect.Storage
         /// <returns>True if the save operation was successful</returns>
         public bool Save(string key, byte[] contents)
         {
-            var fileName = GetFilePath(key);
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
 
             try
             {
+                var fileName = GetFilePath(key);
+
                 File.WriteAllBytes(fileName, contents);
             }
             catch (Exception exception)
             {
-                Log.Error($"Error saving file: [{key}] - {exception}");
+                Log.Error(exception, $"Error saving file, key: [{key}]");
                 return false;
             }
 
@@ -104,15 +133,20 @@ namespace QuantConnect.Storage
         /// <returns>True if the delete operation was successful</returns>
         public bool Delete(string key)
         {
-            var fileName = GetFilePath(key);
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
 
             try
             {
+                var fileName = GetFilePath(key);
+
                 File.Delete(fileName);
             }
             catch (Exception exception)
             {
-                Log.Error($"Error deleting file: [{key}] - {exception}");
+                Log.Error(exception, $"Error deleting file, key: [{key}]");
                 return false;
             }
 
@@ -126,10 +160,12 @@ namespace QuantConnect.Storage
         /// <returns>The path for the file</returns>
         public string GetFilePath(string key)
         {
-            // create the root path if it does not exist
-            Directory.CreateDirectory(_rootPath);
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
 
-            return Path.Combine(_rootPath, $"{key.ToMD5()}.dat");
+            return Path.Combine(_algorithmStorageRoot, $"{key.ToMD5()}.dat");
         }
 
         /// <summary>
@@ -137,6 +173,18 @@ namespace QuantConnect.Storage
         /// </summary>
         public void Dispose()
         {
+            try
+            {
+                // if the object store was not used, delete the empty storage directory created in Initialize
+                if (!Directory.EnumerateFileSystemEntries(_algorithmStorageRoot).Any())
+                {
+                    Directory.Delete(_algorithmStorageRoot);
+                }
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception, "Error deleting storage directory.");
+            }
         }
     }
 }

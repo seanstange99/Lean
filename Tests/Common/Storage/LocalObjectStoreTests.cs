@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.IO;
 using NUnit.Framework;
 using QuantConnect.Packets;
@@ -76,6 +77,29 @@ namespace QuantConnect.Tests.Common.Storage
 
             Assert.AreEqual(expected.EmaFastPeriod, actual.EmaFastPeriod);
             Assert.AreEqual(expected.EmaSlowPeriod, actual.EmaSlowPeriod);
+        }
+
+        [Test]
+        public void ThrowsIfKeyIsNull()
+        {
+            Assert.Throws<ArgumentNullException>(() => _store.ContainsKey(null));
+            Assert.Throws<ArgumentNullException>(() => _store.Read(null));
+            Assert.Throws<ArgumentNullException>(() => _store.Save(null, null));
+            Assert.Throws<ArgumentNullException>(() => _store.Delete(null));
+            Assert.Throws<ArgumentNullException>(() => _store.GetFilePath(null));
+        }
+
+        [Test]
+        public void DisposeRemovesEmptyStorageFolder()
+        {
+            using (var store = new LocalObjectStore())
+            {
+                store.Initialize("unused", 0, 0, "", new Controls());
+
+                Assert.IsTrue(Directory.Exists("./storage/unused"));
+            }
+
+            Assert.IsFalse(Directory.Exists("./storage/unused"));
         }
 
         public class TestSettings
