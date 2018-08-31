@@ -29,7 +29,11 @@ namespace QuantConnect.Storage
     public class LocalObjectStore : IObjectStore
     {
         private static readonly string StorageRoot = Path.GetFullPath(Config.Get("object-store-root", "./storage"));
-        private string _algorithmStorageRoot;
+
+        /// <summary>
+        /// The root storage folder for the algorithm
+        /// </summary>
+        protected string AlgorithmStorageRoot { get; private set; }
 
         /// <summary>
         /// Initializes the object store
@@ -39,13 +43,13 @@ namespace QuantConnect.Storage
         /// <param name="projectId">The project id</param>
         /// <param name="userToken">The user token</param>
         /// <param name="controls">The job controls instance</param>
-        public void Initialize(string algorithmName, int userId, int projectId, string userToken, Controls controls)
+        public virtual void Initialize(string algorithmName, int userId, int projectId, string userToken, Controls controls)
         {
             // absolute path including algorithm name
-            _algorithmStorageRoot = Path.Combine(StorageRoot, algorithmName);
+            AlgorithmStorageRoot = Path.Combine(StorageRoot, algorithmName);
 
             // create the root path if it does not exist
-            Directory.CreateDirectory(_algorithmStorageRoot);
+            Directory.CreateDirectory(AlgorithmStorageRoot);
         }
 
         /// <summary>
@@ -165,20 +169,20 @@ namespace QuantConnect.Storage
                 throw new ArgumentNullException(nameof(key));
             }
 
-            return Path.Combine(_algorithmStorageRoot, $"{key.ToMD5()}.dat");
+            return Path.Combine(AlgorithmStorageRoot, $"{key.ToMD5()}.dat");
         }
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
-        public void Dispose()
+        public virtual void Dispose()
         {
             try
             {
                 // if the object store was not used, delete the empty storage directory created in Initialize
-                if (!Directory.EnumerateFileSystemEntries(_algorithmStorageRoot).Any())
+                if (!Directory.EnumerateFileSystemEntries(AlgorithmStorageRoot).Any())
                 {
-                    Directory.Delete(_algorithmStorageRoot);
+                    Directory.Delete(AlgorithmStorageRoot);
                 }
             }
             catch (Exception exception)
